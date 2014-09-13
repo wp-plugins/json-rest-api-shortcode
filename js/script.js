@@ -23,31 +23,33 @@
     	// Replace it with loading text.
 		$( '#sjf_tjra_form [type="submit"]' ).replaceWith( 'loading...' );
         
-        domain = $( '#domain' ).text();
-        method = $( '#method' ).text();
-        route = $( '#route' ).text();
-        data = $( '#data' ).text();
+        // Grab the shortcode args from the DOM.
+        domain = $( '#values #domain' ).text();
+        method = $( '#values #method' ).text();
+        route  = $( '#values #route' ).text();
+        data   = $( '#values #data' ).text();
         
-		// Send the post ID to the server side so we can get content for this post.
+		// Send the data to the server.
         var ajaxData = {
 
             // This value corresponds with a call to "localize script" in the php code.
             action: 'sjf_tjra_ajax',
             
+            // Our shortcode args.
         	domain: domain,
-			
 			route: route,
-			
 			method: method,
-			
 			data: data,
 
         };
 
+		// Make the ajax call.
         $.get( sjf_tjra.ajaxurl, ajaxData, function( ajaxData ) {
             
+            // Print the result of the Ajax call in the output div.
             $( '#output' ).html( ajaxData ).fadeIn();
 
+			// Fade out the form.
             $( '#sjf_tjra_form' ).fadeOut();
 
         });

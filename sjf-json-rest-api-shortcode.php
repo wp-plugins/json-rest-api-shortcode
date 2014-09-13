@@ -4,7 +4,7 @@
  * Plugin Name: SJF Test JSON REST API
  * Plugin URI: http://scottfennell.org/2014/09/08/wordpress-json-rest-api-shortcode-tutorial/
  * Description: The purpose of this plugin is to give developers a simple block of code for "hello-world-ing" the new WordPress JSON Rest API:  http://wp-api.org/.
- * Version: 1.0
+ * Version: 1.0.1
  * Author: scofennell@gmail.com
  * Author URI: http://scottfennell.org
  * License: GPL2
@@ -95,16 +95,28 @@ class SJF_Test_JSON_REST_API {
 
 	    // We are gonna need jQuery to send our ajax request.    
 		wp_enqueue_script( 'jquery' );
+		
+		// Our plugin js file that handles the ajax call.
 		wp_enqueue_script(
+			
+			// Script handle.
 			'sjf_tjra',
+
+			// Script src.
 			SJF_TJRA_URL . 'js/script.js',
+			
+			// Load it after jquery.
 			array( 'jquery' ),
+	        
+			// No version number.
 	        false,
+
+	        // Load it in the footer.
 	        true
 	    );
 
 		// Get current page protocol
-		$protocol = isset( $_SERVER["HTTPS"]) ? 'https://' : 'http://';
+		$protocol = isset( $_SERVER[ 'HTTPS'] ) ? 'https://' : 'http://';
 
 		// Output admin-ajax.php URL with same protocol as current page
 		$params = array(
@@ -115,16 +127,18 @@ class SJF_Test_JSON_REST_API {
 		wp_localize_script( 'sjf_tjra', 'sjf_tjra', $params );
 
 		// Build a url to which we'll send our data.
-		$domain = trailingslashit( esc_url( $a[ 'domain' ] ) );
+		$domain  = trailingslashit( esc_url( $a[ 'domain' ] ) );
 		$domain .= 'wp-json/';
-		$domain = esc_url( $domain );
-		$route = sanitize_text_field( $a[ 'route' ] );
-		$url = $domain . $route;
+		$domain  = esc_url( $domain );
+		$route   = sanitize_text_field( $a[ 'route' ] );
+		$url     = $domain . $route;
 
-		$method = sanitize_text_field( $a[ 'method' ] );
-		$route = sanitize_text_field( $a[ 'route' ] );
-		$data = sanitize_text_field( $a[ 'data' ] );
+		// Sanitize the shortcode args before sending them to our ajax script.
+		$method = strtoupper( esc_attr( $a[ 'method' ] ) );
+		$route  = sanitize_text_field( $a[ 'route' ] );
+		$data   = sanitize_text_field( $a[ 'data' ] );
 
+		// Add the shortcode args to the DOM so we can grab them with jQuery.  Also nice for debugging/clarity.
 		$values = "
 			<ul id='values'>
 				<li id='domain'>$domain</li>
@@ -134,13 +148,10 @@ class SJF_Test_JSON_REST_API {
 			</ul>
 		"; 
 
-		// Sanitize and format the shortcode args before we pass them to our script.
-		$method = strtoupper( esc_attr( $a[ 'method' ] ) );
-		$data = sanitize_text_field( $a[ 'data' ] );
-
+		
 		// If you're making anything other than a GET request, you need to supply data.
 		if( $method != 'GET' ) {
-			if( empty( $data ) || ( $data == '{}' ) ) { wp_die( "You must supply data when making a $method request. Example: { title: 'Hello Worldly Title Here', content_raw: 'This is the content of the new post we are creating.' } " ); }
+			if( empty( $data ) || ( $data == '{}' ) ) { wp_die( __( "You must supply data when making a $method request. Example: { title: 'Hello Worldly Title Here', content_raw: 'This is the content of the new post we are creating.' } " ) ); }
 		}
 
 		// This script will send an ajx request to the JSON API.
@@ -176,19 +187,27 @@ class SJF_Test_JSON_REST_API {
 	 */
 	function sjf_tjra_ajax() {
 	
-		$domain = $_REQUEST[ 'domain' ];
-		$route = $_REQUEST[ 'route' ];
-		$method = $_REQUEST[ 'method' ];
-		$data = $_REQUEST[ 'data' ];
+		// Build a url to which we'll send our data.
+		$domain  = trailingslashit( esc_url( $_REQUEST[ 'domain' ] ) );
+		$domain  = esc_url( $domain );
+		$route   = sanitize_text_field( $a[ 'route' ] );
+		$url     = $domain . $route;
+
+		// Sanitize the shortcode args before sending them to our ajax script.
+		$route = sanitize_text_field( $_REQUEST[ 'route' ] );
+		$method = strtoupper( esc_attr( $_REQUEST[ 'method' ] ) );
+		$data = sanitize_text_field( $_REQUEST[ 'data' ] );
 		
+		// Options to pass to wp_remote_request.
 		$args = array();
 
-		$url = esc_url( $domain . $route );
-
+		// Send our request.
 		$request = wp_remote_request( $url, $args );
 
-		$body = esc_html( $request[ 'body' ] );
+		echo "$url";
 
+		// The echo the body of our reqest.
+		$body = esc_html( $request[ 'body' ] );
 		echo $body;
 
 		// This is necessary to avoid outputting a "0" after any ajax call in WordPress.
